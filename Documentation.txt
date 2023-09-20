@@ -1,0 +1,97 @@
+Matrices in Scheme are represented by a list of lists where each of those lists are the rows.
+For example: Matrix = '((1 2 3)(1 2 3)(3 2 1)) is the representation in Scheme of the following matrix.
+1 2 3
+1 2 3
+3 2 1
+
+MAIN FUNCTIONS:
+- Function: (read-float-matrix-from-file file-path)
+Takes the name of a file (a string) and reads the csv matrix from that file.
+
+- Function: (print-float-matrix matrix)
+Prints a float matrix (a list of flaot lists)
+
+- Function: (assign_clusters distance_matrix medoids)
+Takes two arguments: distance_matrix and medoids (a list of indices representing the chosen medoids).
+It assigns every point to a medoid creating a list of clusters, it returns the list of clusters.
+A cluster is a list of indices of the points that form part of.
+
+- Function: (calculate_cost distance_matrix clusters medoids)
+This function calculates the cost of the given clusters distribution.
+
+- Function: (calculate_silhouette distance_matrix clusters)
+This function calculates the silhouette of the given clusters distribution.
+
+- Function: (greedy_medoid_selection distance_matrix n k)
+This algorithm selects a set of k medoids from a distance matrix based on a greedy approach, it returns the list of medoids. 
+Its length is k.
+
+- Function: (pam distance_matrix k)
+Apply PAM algorithm with k medoids to the given distance matrix.
+
+- Function: (main file-path)
+Tries applying pam with different numbers of k
+
+- Function: (elapsed-time main_function file-path)
+Shows the elapsed time and the statistics for the results obtained using the matrix stored at file-path.
+
+
+AUXILIARY FUNCTIONS:
+
+- Function: (sum-list lst)
+This function calculates the sum of all the elements in a given list
+
+- Function: (mean-list lst)
+This function calculates the mean (average) of a given list of numbers
+
+- Function: (mymin lst)
+This function finds the minimum value in a given list
+
+- Function: (min-index lst)
+This function finds the index of the minimum value in a given list
+
+- Function: (index-of lst value index)
+This function searches for a given value in a list and returns the index of the first occurrence of that value
+
+- Function: (argmin-rows matrix)
+This function takes a matrix (a list of lists) as input and returns a list of indices, where each index
+corresponds to the minimum value in each row of the matrix.
+
+- Function: (zip l1 l2)
+This function takes two lists, l1 and l2, and combines corresponding elements from both
+lists into pairs using the map function and list function.
+
+- Function: (matrix-change-row matrix row new_value)
+This function returns a matrix with the new_value in the given row.
+
+- Function: (row_value matrix indexes)
+This function takes a matrix (a list of lists) and a list of indices as input. It retrieves the values from the matrix
+corresponding to the given indices and returns them as a list.
+
+- Function: (while condition body)
+This defines a recursive while
+
+- Function: (min-rows matrix)
+This function returns a list with the minimums of every row.
+
+- Function: (list-subtract xs ys)
+This function takes a matrix (a list of lists) and a list of column indices as input.
+It selects and returns the specified columns from the matrix.
+
+- Function: (matrix-select-columns matrix columns)
+This function takes a matrix (a list of lists) and a list of column indices as input.
+It selects and returns the specified columns from the matrix.
+
+- Function: (filter-indices lst indices) 
+This function filter the elements positioning in the given indices from a list.
+
+- Function: (matrix-select-rows matrix rows)
+This function takes a matrix (a list of lists) and a list of row indices as input.
+It selects and returns the specified rows from the matrix.
+
+- Function: (matrix-select-rows-cols matrix rows columns)
+This function takes a matrix (a list of lists) and a list of row and column indices as input.
+It selects and returns the specified rows and columns from the matrix.
+
+- Function: (sum-matrix matrix)
+Function that reads the csv matrix from a file

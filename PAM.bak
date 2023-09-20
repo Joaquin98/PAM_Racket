@@ -1,0 +1,89 @@
+#lang racket
+
+; Function that reads the csv matrix from a file
+(define (read-float-matrix-from-file file-path)
+  (let loop ((port (open-input-file file-path))
+             (matrix '()))
+    (let ((line (read-line port)))
+      (if (eof-object? line)
+          (begin
+            (close-input-port port)
+            matrix)
+          (loop port (append matrix (list (map string->number (string-split (substring line 0 (- (string-length line) 1)) ",")))))))))
+
+
+(define (print-float-matrix matrix)
+  (for-each (lambda (row) (for-each (lambda (f) (display f) (display " ")) row) (newline)) matrix))
+
+
+(define (sum-list lst)
+  (cond
+    ((null? lst) 0)                  ; base case: an empty list has a sum of 0
+    (else (+ (car lst) (sum-list (cdr lst)))))) ; add the first element to the sum of the rest
+
+
+(sum-list '(0))
+(length '(1 23 54))
+
+(define (mean-list lst)
+  (let* ((sum (apply + lst))         ; calculate the sum of the list using `apply`
+         (count (length lst)))       ; count the number of elements in the list using `length`
+    (/ sum count)))                  ; divide the sum by the count to get the mean
+
+
+(mean-list '(1 2 3 7 6 5))
+
+(define (min-index lst)
+  (define min-value (apply min lst))  ; Find the minimum value in the list using `apply` and `min`
+  (define index (index-of lst min-value 0))  ; Call a helper function to get the index of the minimum value
+  index)
+
+(define (index-of lst value index)
+  (cond
+    ((null? lst) #f)  ; Value not found
+    ((equal? (car lst) value) index)  ; Value found, return the current index
+    (else (index-of (cdr lst) value (+ index 1)))))  ; Recursively search for the value in the rest of the list
+
+(define (argmin-rows matrix) (map (lambda (row) (min-index row)) matrix))
+
+(min-index '(5 2 3 7 1 5))
+
+(define (read_distance_matrix_from_file file_path)(read-float-matrix-from-file file-path))
+
+(define (assign_clusters distance_matrix medoids)'())
+(define (calculate_cost distance_matrix clusters medoids)'())
+(define (calculate_silhouette distance_matrix clusters)'())
+(define (greedy_medoid_selection distance_matrix n k)'())
+(define (pam distance_matrix k)'())
+
+; Reads Matrix
+(define file-path "dist_matrix(10000x10000).txt")
+(define matrix (read_distance_matrix_from_file file-path))
+(print-float-matrix matrix)
+
+(argmin-rows matrix)
+
+(define (matrix-select-columns matrix columns) (map (lambda (row) (indices-filter row columns)) matrix))
+
+(define (indices-filter lst indices) (indices-filter-aux lst indices 0))
+
+(define (indices-filter-aux lst indices n) (cond ((null? lst) '())
+                                                 (else (if (member n indices)
+                                               (cons (car lst) (indices-filter-aux (cdr lst) indices (+ n 1)))
+                                               (indices-filter-aux (cdr lst) indices (+ n 1))))))
+
+(range 1 9)
+
+(indices-filter '(1 2 3 4 5 6 7 8) '(0 5 2))
+
+(print-float-matrix (matrix-select-columns matrix '(0 3)))
+
+(define (main) (let* ([file_path "dist_matrix(10000x10000).txt"]
+                     [distance_matrix (read_distance_matrix_from_file file-path)]
+                     [k_values (range 2 6)]
+                     [max_avg_silhouette -2]) (range 1 10000000)))
+
+
+(define (time-elapsed fun)(let ([start_time (current-seconds)]
+                                [resutl (fun)]) (- (current-seconds) start_time)))
+(time-elapsed main)

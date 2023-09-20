@@ -1,0 +1,340 @@
+#lang racket
+
+;; ------------------- START AUXILIARY FUNCTIONS:
+
+; This function calculates the sum of all the elements in a given list
+(define (sum-list lst)
+  (cond
+    ((null? lst) 0)                  ; base case: an empty list has a sum of 0
+    (else (+ (car lst) (sum-list (cdr lst)))))) ; add the first element to the sum of the rest
+
+;(sum-list '(0 1 2 3 4 5))
+
+; This function calculates the mean (average) of a given list of numbers
+(define (mean-list lst)
+  (let* ((sum (apply + lst))         ; calculate the sum of the list using `apply`
+         (count (length lst)))       ; count the number of elements in the list using `length`
+    (if (equal? count 0) 0 (/ sum count))))                  ; divide the sum by the count to get the mean
+
+;(mean-list '(1 2 3 7 6 5))
+
+; This function finds the minimum value in a given list
+(define (minimum lst acc)
+  (cond
+    ((null? lst) acc)
+    ((< (car lst) acc)
+     (minimum (cdr lst) (car lst)))
+    (else
+     (minimum (cdr lst) acc))))
+
+;  This function finds the minimum value in a given list by utilizing the minimum function previously defined
+(define (mymin lst)
+  (if (null? lst)
+      #f
+      (minimum (cdr lst) (car lst))))
+
+;  This function finds the index of the minimum value in a given list
+(define (min-index lst)
+  (define min-value (mymin lst))  ; Find the minimum value in the list using `apply` and `min`
+  (define index (index-of lst min-value 0))  ; Call a helper function to get the index of the minimum value
+  index)
+
+;(min-index '(5 2 3 7 1 5))
+
+; This function searches for a given value in a list and returns the index of the first occurrence of that value
+(define (index-of lst value index)
+  (cond
+    ((null? lst) #f)  ; Value not found
+    ((equal? (car lst) value) index)  ; Value found, return the current index
+    (else (index-of (cdr lst) value (+ index 1)))))  ; Recursively search for the value in the rest of the list
+
+; This function takes a matrix (a list of lists) as input and returns a list of indices, where each index
+; corresponds to the minimum value in each row of the matrix.
+(define (argmin-rows matrix) (map (lambda (row) (min-index row)) matrix))
+
+; This function takes two lists, l1 and l2, and combines corresponding elements from both
+; lists into pairs using the map function and list function.
+(define zip (lambda (l1 l2) (map list l1 l2)))
+
+;(zip '(1 2) '(3 4))
+
+; This function returns a matrix with the new_value in the given row.
+(define (matrix-change-row matrix row new_value)
+  (append (take matrix row)
+        (make-list 1 new_value)
+        (drop matrix (+ row 1))))
+
+; This function takes a matrix (a list of lists) and a list of indices as input. It retrieves the values from the matrix
+; corresponding to the given indices and returns them as a list.
+(define (row_value matrix indexes) (map (lambda (pair)
+                                          (let ([row (first pair)]
+                                                [col (second pair)])
+                                            (list-ref (list-ref matrix row) col))) (zip (range (length indexes)) indexes)))
+; This defines a recursive while
+(define (while condition body)
+  (when (condition)
+    (body)
+    (while condition body)))
+
+; This function returns a list with the minimums of every row.
+(define (min-rows matrix) (map mymin matrix))
+
+(define (list-subtract xs ys)
+  (if (empty? ys)
+      xs
+      (list-subtract (remove (first ys) xs) (rest ys))))
+
+; This function takes a matrix (a list of lists) and a list of column indices as input.
+; It selects and returns the specified columns from the matrix.
+(define (matrix-select-columns matrix columns) (map (lambda (row) (indices-filter row columns)) matrix))
+
+;(print-float-matrix (matrix-select-columns matrix '(0 3)))
+;(argmin-rows (matrix-select-columns matrix '(0 3)))
+
+; This function filter the elements positioning in the given indices from a list.
+(define (filter-indices lst indices)  
+  (map (lambda (index) (list-ref lst index))
+       indices))
+
+
+;(display (filter-indices '(1 2 3 4 5) '(0 2 4)))
+
+; This function takes a matrix (a list of lists) and a list of row indices as input.
+; It selects and returns the specified rows from the matrix.
+(define (matrix-select-rows matrix rows) (filter-indices matrix rows))
+
+; This function takes a matrix (a list of lists) and a list of row and column indices as input.
+; It selects and returns the specified rows and columns from the matrix.
+(define (matrix-select-rows-cols matrix rows columns) (matrix-select-rows (matrix-select-columns matrix columns) rows))
+
+(define (indices-filter lst indices) (indices-filter-aux lst indices 0))
+
+(define (indices-filter-aux lst indices n) (cond ((null? lst) '())
+                                                 (else (if (member n indices)
+                                               (cons (car lst) (indices-filter-aux (cdr lst) indices (+ n 1)))
+                                               (indices-filter-aux (cdr lst) indices (+ n 1))))))
+
+;(indices-filter '(1 2 3 4 5 6 7 8) '(0 5 2))
+
+; Reduce function.
+(define (reduce func list)
+  (cond ((null? list)'())
+        (else
+  (if (null? (cdr list))
+      (car list)
+      (func (car list) (reduce func (cdr list)))))))
+
+
+; Function that reads the csv matrix from a file
+(define (sum-matrix matrix) (reduce + (map sum-list matrix)))
+
+
+(define (string-filter predicate str)
+  (list->string
+   (filter-map (lambda (char)
+                 (if (predicate char) char #f))
+               (string->list str))))
+
+(define (remove-spaces str)
+  (string-filter (lambda (char) (not (char=? #\space char))) str))
+
+;(define test-string "Hello, world!")
+;(define result (remove-spaces test-string))
+
+
+;; ------------------- END AUXILIARY FUNCTIONS:
+
+;; ------------------- START MAIN PAM ALGORITHMS FUNCTIONS:
+
+
+; Function that reads the csv matrix from a file
+(define (read-float-matrix-from-file file-path)
+  (let loop ((port (open-input-file file-path))
+             (matrix '()))
+    (let ((line (read-line port)))
+      (if (eof-object? line)
+          (begin
+            (close-input-port port)
+            matrix)
+          (loop port (append matrix (list (map string->number (string-split (substring line 0 (- (string-length (remove-spaces line)) 1)) ",")))))))))
+
+; Function that reads the csv matrix from a file
+(define (read_distance_matrix_from_file file-path)(read-float-matrix-from-file file-path))
+
+; Function that prints a float matrix
+(define (print-float-matrix matrix)
+  (for-each (lambda (row) (for-each (lambda (f) (display f) (display " ")) row) (newline)) matrix))
+
+; assign_clusters
+(define (assign_clusters distance_matrix medoids)
+  (let* ([cluster_indices (argmin-rows (matrix-select-columns distance_matrix medoids))]
+         [clusters (make-list (length medoids) (make-list 0 0))]
+         ;[y (display cluster_indices)]
+         [indexed_clusters (zip (range (length cluster_indices)) cluster_indices)])
+         (for ([indexed_cluster indexed_clusters])
+           (let* ([index (first indexed_cluster)]
+                  [cluster_index (second indexed_cluster)])
+             (set! clusters (matrix-change-row clusters cluster_index (cons index (list-ref clusters cluster_index))))
+             ))
+    clusters))
+
+; calculate_cost
+(define (calculate_cost distance_matrix clusters medoids)
+  (let*([indexed_clusters (zip (range (length clusters)) clusters)]
+       [medoid_indices (let ([indices '()])
+                           (for ([indexed_cluster indexed_clusters])
+                             (let* ([i (first indexed_cluster)]
+                                    [cluster (second indexed_cluster)])
+                             (set! indices (append indices (make-list (length cluster) (list-ref medoids i)))))) indices)])
+  (sum-list (row_value distance_matrix medoid_indices))))
+
+; calculate_silhouette
+(define (calculate_silhouette distance_matrix clusters)
+  (let* ([n (length distance_matrix)]
+        [silhouette 0]
+        [score 0])
+    (for ([cluster clusters])
+      (when (not (null? cluster))(for ([vector cluster])
+        (let* ([ai (mean-list (filter-indices (list-ref distance_matrix vector) cluster))]
+               [bi +inf.0])
+          (for ([other_cluster clusters])
+            (when (and (not (equal? other_cluster cluster)) (not (null? (filter-indices (list-ref distance_matrix vector) other_cluster))))
+              (set! bi (min bi (mean-list (filter-indices (list-ref distance_matrix vector) other_cluster))))
+              ;(display "\n") 
+              ;(display (mean-list (filter-indices (list-ref distance_matrix vector) other_cluster)))
+              )
+            )
+          ;(printf "\n ~a ~a" bi ai)
+          (let ([s (/ (- bi ai) (max ai bi))])
+              (set! silhouette (+ silhouette s))))
+        )))
+    (set! score (/ silhouette n))
+    score))
+
+; greedy_medoid_selection
+(define (greedy_medoid_selection distance_matrix n k)(let* ([next_medoid (random n)]
+                                                            [medoids (make-list 1 next_medoid)]
+                                                            [remaining_indices (range 0 n)]
+                                                            [remaining_distances '()]
+                                                            )
+                                                       (while (lambda () (< (length medoids) k))
+                                                              (lambda ()
+                                                                (set! remaining_indices (remove next_medoid remaining_indices))
+                                                                ;(display "\n  Remaining \n")
+                                                                ;(display remaining_indices)
+                                                                (set! remaining_distances (matrix-select-rows-cols distance_matrix remaining_indices medoids))
+                                                                ;(display "Remaining distances   ")
+                                                                ;(display  remaining_distances)
+                                                                (set! next_medoid (list-ref remaining_indices (min-index (min-rows remaining_distances))))
+                                                                ;(display (min-rows remaining_distances))
+                                                                ;(display "\n  Medoid \n")
+                                                                ;(display next_medoid)
+                                                                (set! medoids (cons next_medoid medoids))
+                                                                ;(display "\n  Medoids \n")
+                                                                ;(display medoids)
+                                                                ))medoids))
+
+; pam main algorithm
+(define (pam distance_matrix k)(let* ([n (length distance_matrix)]
+                                      [medoids (greedy_medoid_selection distance_matrix n k)]
+                                      [clusters (assign_clusters distance_matrix medoids)]
+                                      [total_cost (calculate_cost distance_matrix clusters medoids)]
+                                      [silhouette 0]
+                                      [updated #t])
+                                 (while (lambda () updated)
+                                        (lambda () (set! updated #f)
+                                         (for ([i (range (length medoids))])
+                                           (when (not updated) 
+                                           (let ([non_medoids (list-subtract (range n) medoids)])
+                                             (for ([non_medoid non_medoids])
+                                               (let ([new_medoids medoids])
+                                                 (set! new_medoids (matrix-change-row new_medoids i non_medoid))
+                                                  (let ([new_total_cost (calculate_cost distance_matrix clusters new_medoids)])
+                                                    (when (< new_total_cost total_cost)
+                                                      (set! medoids new_medoids)
+                                                       (set! total_cost new_total_cost)
+                                                       (set! updated #t)
+                                                       ))))))
+                                         (set! clusters (assign_clusters distance_matrix medoids))))
+                                  )
+                                 ;(display clusters)
+                                 ;(display "\n")
+                                 (set! silhouette (calculate_silhouette distance_matrix clusters))
+                                 (values clusters medoids silhouette)))
+
+; Tries with different numbers of k
+(define (main file-path) (let* (
+                     [distance_matrix (read_distance_matrix_from_file file-path)]
+                     [k_values (range 2 6)]
+                     [max_avg_silhouette -2]
+                     [best_k 0]
+                     [best_clusters '()]
+                     [best_medoids '()]) (for ([k k_values])
+                     (let-values ([(clusters medoids silhouette) (pam distance_matrix k)])
+                       (printf "K is ~a, and silhouette is ~a\n" k silhouette)
+                       (when (> silhouette max_avg_silhouette)
+                                     (set! max_avg_silhouette silhouette)
+                                      (set! best_k k)
+                                      (set! best_clusters clusters)
+                                      (set! best_medoids medoids)
+                                      )
+                       
+                                 ))(values best_k max_avg_silhouette best_clusters)))
+
+; Shows the elapsed time and the statistics
+(define (elapsed-time main_function file-path)(let ([start_time (current-seconds)])
+                                      (let-values ([(best_k max_avg_silhouette best_clusters) (main_function file-path)])
+                                      (printf "\nElapsed Time:  ~a Seconds" (- (current-seconds) start_time))
+                                        (printf "\nBest k is: ~a" best_k)
+                                        (printf "\nSilhouette is: ~a" max_avg_silhouette)
+                                        (for ([i (range best_k)])
+                                        (printf "\nCluster ~a has ~a vectors" i (length (list-ref best_clusters i))) ))))
+
+;; ------------------- END MAIN PAM ALGORITHMS FUNCTIONS:
+
+;; ------------------- START TESTS:
+
+
+
+
+
+(display "IRIS:\n")
+(elapsed-time main  "iris_dist_matrix.csv")
+(display "\n\n")
+(display "PENGUINS:\n")
+(elapsed-time main  "penguins_dist_matrix.csv")
+;(display "\n\nBIG 10000x10000:\n")
+;(elapsed-time main  "matrix.csv")
+;(display "\n\nBIG 10000x10000:\n")
+;(elapsed-time main  "dis_matrix(10000x10000).txt")
+
+; Reads Matrix
+;(define file-path "dis_matrix(10000x10000).txt")
+;(define matrix (read_distance_matrix_from_file file-path))
+
+;(print-float-matrix matrix)
+
+;(argmin-rows matrix)
+
+;(matrix-select-rows-cols matrix '(0 1) '(0 1))
+;(define medoids (greedy_medoid_selection matrix 5 2))
+;(display medoids)
+;(display "\n")
+;(define clusters (assign_clusters matrix medoids))
+
+;(calculate_silhouette matrix clusters)
+;(calculate_cost matrix clusters medoids)
+
+;(row_value matrix '(0 1 2 3 4))
+
+
+;(list-subtract '(a a b b c) '(a b))
+
+;(display "\n")
+;(calculate_silhouette matrix '((1) (0) (2 3 4)))
+; 0.6896860986547085
+
+;(calculate_silhouette matrix '((1 2 3 4) () () (0)))
+; 0.8466021298605837
+
+;; ------------------- END TESTS:
